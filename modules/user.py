@@ -20,6 +20,7 @@ from modules.MFMOS import *
 from modules.PointRefine.spvcnn import SPVCNN
 # from modules.PointRefine.spvcnn_lite import SPVCNN
 
+
 class User():
     def __init__(self, ARCH, DATA, datadir, outputdir, modeldir, split, point_refine=False, save_movable=False):
         # parameters
@@ -52,7 +53,7 @@ class User():
                                           sensor=self.ARCH["dataset"]["sensor"],
                                           max_points=self.ARCH["dataset"]["max_points"],
                                           batch_size=self.infer_batch_size,
-                                          workers=2, # self.ARCH["train"]["workers"],
+                                          workers=2,  # self.ARCH["train"]["workers"],
                                           gt=True,
                                           shuffle_train=False)
 
@@ -75,7 +76,7 @@ class User():
                 self.model = nn.DataParallel(self.model)
                 checkpoint = "MFMOS_SIEM_valid_best"
                 w_dict = torch.load(f"{self.modeldir}/{checkpoint}", map_location=lambda storage, loc: storage)
-                self.model.load_state_dict({f"module.{k}":v for k,v in w_dict['main_state_dict'].items()}, strict=True)
+                self.model.load_state_dict({f"module.{k}": v for k, v in w_dict['main_state_dict'].items()}, strict=True)
 
                 net_config = {'num_classes': self.parser.get_n_classes(), 'cr': 1.0, 'pres': 0.05, 'vres': 0.05}
                 self.refine_module = SPVCNN(num_classes=net_config['num_classes'],
@@ -84,7 +85,7 @@ class User():
                                             vres=net_config['vres'])
                 self.refine_module = nn.DataParallel(self.refine_module)
                 w_dict = torch.load(f"{modeldir}/{checkpoint}", map_location=lambda storage, loc: storage)
-                self.refine_module.load_state_dict({f"module.{k}":v for k,v in w_dict['refine_state_dict'].items()}, strict=True)
+                self.refine_module.load_state_dict({f"module.{k}": v for k, v in w_dict['refine_state_dict'].items()}, strict=True)
 
         self.set_gpu_cuda()
 
@@ -106,7 +107,6 @@ class User():
             self.model.cuda()
             if self.point_refine:
                 self.refine_module.cuda()
-
 
     def infer(self):
         cnn, knn = [], []
@@ -176,7 +176,7 @@ class User():
                     if self.post:
                         proj_range = proj_range.cuda()
                         unproj_range = unproj_range.cuda()
-                
+
                 end = time.time()
                 # compute output
                 proj_output, _, movable_proj_output, _ = self.model(proj_in)

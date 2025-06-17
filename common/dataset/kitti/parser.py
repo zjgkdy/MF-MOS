@@ -539,6 +539,7 @@ class Parser():
                  workers,           # threads to load data
                  valid_residual_delta_t=1,  # modulation interval in data augmentation fro residual maps
                  gt=True,           # get gt?
+                 transform=False,
                  shuffle_train=False):  # shuffle training set?
         super(Parser, self).__init__()
 
@@ -561,6 +562,7 @@ class Parser():
         self.batch_size = batch_size
         self.workers = workers
         self.gt = gt
+        self.transform = transform
         self.shuffle_train = shuffle_train
 
         # number of classes that matters is the one for xentropy
@@ -581,7 +583,7 @@ class Parser():
                                                movable_learning_map_inv=self.movable_learning_map_inv,
                                                sensor=self.sensor,
                                                max_points=max_points,
-                                               transform=True,
+                                               transform=self.transform,
                                                gt=self.gt,
                                                drop_few_static_frames=True)
 

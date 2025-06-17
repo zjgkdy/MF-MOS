@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DatasetPath=DATAROOT
-ModelPath=MODELPATH
+DatasetPath=data/semantic_kitti
+ModelPath=/home/luoteng/MF-MOS/ckpt/mfmos_ckpt_iou7612
 SavePath=./log/Valid/predictions/
 SPLIT=valid # valid or test
 

@@ -9,6 +9,7 @@ from scipy.spatial.transform import Rotation as R
 # import math
 # import time
 
+
 class LaserScan:
     """ Class that contains LaserScan with x,y,z,r,intensity """
     EXTENSIONS_SCAN = ['.bin']
@@ -99,9 +100,9 @@ class LaserScan:
         points = points_transformed[:, :3]
         remissions = scan[:, 3]  # get remission
         if self.drop_points is not False:
-            self.points_to_drop = np.random.randint(0, len(points)-1,int(len(points)*self.drop_points))
-            points = np.delete(points,self.points_to_drop,axis=0)
-            remissions = np.delete(remissions,self.points_to_drop)
+            self.points_to_drop = np.random.randint(0, len(points) - 1, int(len(points) * self.drop_points))
+            points = np.delete(points, self.points_to_drop, axis=0)
+            remissions = np.delete(remissions, self.points_to_drop)
 
         self.set_points(points, remissions)
 
@@ -124,7 +125,7 @@ class LaserScan:
         if self.flip_sign:
             self.points[:, 1] = -self.points[:, 1]
         if self.DA:
-            jitter_x = random.uniform(-5,5)
+            jitter_x = random.uniform(-5, 5)
             jitter_y = random.uniform(-3, 3)
             jitter_z = random.uniform(-1, 0)
             self.points[:, 0] += jitter_x
@@ -134,7 +135,7 @@ class LaserScan:
             self.points = self.points @ R.random(random_state=1234).as_dcm().T
         if remissions is not None:
             self.remissions = remissions  # get remission
-            #if self.DA:
+            # if self.DA:
             #    self.remissions = self.remissions[::-1].copy()
         else:
             self.remissions = np.zeros((points.shape[0]), dtype=np.float32)
@@ -219,7 +220,7 @@ class LaserScan:
             self.normal_map[proj_y, proj_x] = normals
 
     def gen_normal_map_open3d(self, points):
-        # If numpy is 1.18.1 (open3d 0.9.0 py3.7), estimate_normals will leak memory, 
+        # If numpy is 1.18.1 (open3d 0.9.0 py3.7), estimate_normals will leak memory,
         #  and then I updated it to 1.19.4 according to the issue below
         #  https://github.com/isl-org/Open3D/issues/1787
         #  https://github.com/isl-org/Open3D/issues/2107
@@ -227,11 +228,11 @@ class LaserScan:
         pcd.points = o3d.utility.Vector3dVector(points)
         # Calculate normal, search radius 20cm, only consider 15 points in the neighborhood
         pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.2, max_nn=15))
-        ## Calculate normals, considering only 20 points in the neighborhood
+        # Calculate normals, considering only 20 points in the neighborhood
         # pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamKNN(knn=10))
         normals = np.asarray(pcd.normals)
         del pcd
-        return normals #np.asarray(pcd.normals)
+        return normals  # np.asarray(pcd.normals)
 
     # This function refers to https://github.com/PRBonn/range-mcl ,
     #  but it runs very slowly
@@ -285,6 +286,7 @@ class LaserScan:
 
         return normal_data
 
+
 class SemLaserScan(LaserScan):
     """Class that contains LaserScan with x,y,z,r,sem_label,sem_color_label,inst_label,inst_color_label"""
     EXTENSIONS_LABEL = ['.label']
@@ -334,11 +336,11 @@ class SemLaserScan(LaserScan):
         # projection color with semantic labels
         self.proj_sem_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
         self.proj_sem_movable_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
-        self.proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float)  # [H,W,3] color
+        self.proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)  # [H,W,3] color
 
         # projection color with instance labels
         self.proj_inst_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
-        self.proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float)  # [H,W,3] color
+        self.proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)  # [H,W,3] color
 
     def open_label(self, filename):
         """ Open raw scan and fill in attributes """
@@ -356,7 +358,7 @@ class SemLaserScan(LaserScan):
         label = label.reshape((-1))
 
         if self.drop_points is not False:
-            label = np.delete(label,self.points_to_drop)
+            label = np.delete(label, self.points_to_drop)
         # set it
         self.set_label(label)
 

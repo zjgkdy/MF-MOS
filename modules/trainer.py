@@ -69,6 +69,7 @@ class Trainer():
                                           batch_size=self.ARCH["train"]["batch_size"],
                                           workers=self.ARCH["train"]["workers"],
                                           gt=True,
+                                          transform=self.ARCH["dataset"]["sensor"]["transform"],
                                           shuffle_train=True)
 
         self.set_loss_weight()
@@ -264,7 +265,8 @@ class Trainer():
 
         # train for n epochs
         for epoch in range(self.epoch, self.ARCH["train"]["max_epochs"]):
-            self.parser.train_sampler.set_epoch(epoch)
+            if self.parser.train_sampler is not None:
+                self.parser.train_sampler.set_epoch(epoch)
             # train for 1 epoch
             acc, iou, loss, update_mean, hetero_l = self.train_epoch(train_loader=self.parser.get_train_set(),
                                                                      model=self.model,

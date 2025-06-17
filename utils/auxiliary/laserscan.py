@@ -37,11 +37,11 @@ class LaserScan:
         self.proj_idx = np.full((self.proj_H, self.proj_W), -1, dtype=np.int32)
 
         # for each point, where it is in the range image
-        self.proj_x = np.zeros((0, 1), dtype=np.float32) # [m, 1]: x
-        self.proj_y = np.zeros((0, 1), dtype=np.float32) # [m, 1]: y
+        self.proj_x = np.zeros((0, 1), dtype=np.float32)  # [m, 1]: x
+        self.proj_y = np.zeros((0, 1), dtype=np.float32)  # [m, 1]: y
 
         # mask containing for each pixel, if it contains a point or not
-        self.proj_mask = np.zeros((self.proj_H, self.proj_W), dtype=np.int32) # [H,W] mask
+        self.proj_mask = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W] mask
 
     def size(self):
         """ Return the size of the point cloud. """
@@ -125,7 +125,7 @@ class LaserScan:
 
         # get projections in image coords
         proj_x = 0.5 * (yaw / np.pi + 1.0)           # in [0.0, 1.0]
-        proj_y = 1.0 - (pitch + abs(fov_down)) / fov # in [0.0, 1.0]
+        proj_y = 1.0 - (pitch + abs(fov_down)) / fov  # in [0.0, 1.0]
 
         # scale to image size using angular resolution
         proj_x *= self.proj_W   # in [0.0, W]
@@ -167,10 +167,13 @@ class SemLaserScan(LaserScan):
     """Class that contains LaserScan with x,y,z,r,sem_label,sem_color_label,inst_label,inst_color_label"""
     EXTENSIONS_LABEL = ['.label']
 
-    def __init__(self, nclasses, sem_color_dict=None, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0):
+    def __init__(self, nclasses, sem_color_dict=None, project=False, H=64, W=1024, fov_up=3.0, fov_down=-25.0, moving_label_map=None):
         super(SemLaserScan, self).__init__(project, H, W, fov_up, fov_down)
         self.reset()
         self.nclasses = nclasses    # number of classes
+        self.moving_label_map = np.zeros(max(moving_label_map.keys())+1, dtype=np.uint8)
+        for k, v in moving_label_map.items():
+            self.moving_label_map[k] = v
 
         # make semantic colors
         max_sem_key = 0
@@ -182,6 +185,9 @@ class SemLaserScan(LaserScan):
         for key, value in sem_color_dict.items():
             self.sem_color_lut[key] = np.array(value, np.float32) / 255.0
             self.gt_sem_color_lut[key] = np.array(value, np.float32) / 255.0
+
+        # make mos iou colors
+        self.mos_iou_color_lut = np.array([[0.0, 0.0, 1.0], [1.0, 0.0, 0.0], [1.0, 1.0, 1.0], [0.0, 1.0, 0.0]], dtype=np.float32)
 
         # make instance colors
         max_inst_id = 100000
@@ -214,17 +220,17 @@ class SemLaserScan(LaserScan):
 
         # projection color with semantic labels
         self.proj_sem_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)    # [H,W]  label
-        self.proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float)    # [H,W,3] color
+        self.proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)    # [H,W,3] color
 
         self.gt_proj_sem_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
-        self.gt_proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float)  # [H,W,3] color
+        self.gt_proj_sem_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)  # [H,W,3] color
 
         # projection color with instance labels
-        self.proj_inst_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32) # [H,W]  label
-        self.proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float) # [H,W,3] color
+        self.proj_inst_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
+        self.proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)  # [H,W,3] color
 
         self.gt_proj_inst_label = np.zeros((self.proj_H, self.proj_W), dtype=np.int32)  # [H,W]  label
-        self.gt_proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float)  # [H,W,3] color
+        self.gt_proj_inst_color = np.zeros((self.proj_H, self.proj_W, 3), dtype=np.float32)  # [H,W,3] color
 
     def open_label(self, filename, gt=False):
         """ Open raw scan and fill in attributes
@@ -308,3 +314,29 @@ class SemLaserScan(LaserScan):
             # instances
             self.proj_inst_label[mask] = self.inst_label[self.proj_idx[mask]]
             self.proj_inst_color[mask] = self.inst_color_lut[self.inst_label[self.proj_idx[mask]]]
+
+    def analysis_proj_iou(self):
+        gt_mos_label = self.moving_label_map[self.gt_sem_label]
+        pred_mos_label = self.moving_label_map[self.sem_label]
+        gt_mos_mask = gt_mos_label == 2
+        pred_mos_mask = pred_mos_label == 2
+        tp_mask = gt_mos_mask & pred_mos_mask
+        fp_mask = (~gt_mos_mask) & pred_mos_mask
+        tn_mask = (~gt_mos_mask) & (~pred_mos_mask)
+        fn_mask = (gt_mos_mask) & (~pred_mos_mask)
+
+        tp = np.sum(tp_mask.astype(np.uint8))
+        fp = np.sum(fp_mask.astype(np.uint8))
+        tn = np.sum(tn_mask.astype(np.uint8))
+        fn = np.sum(fn_mask.astype(np.uint8))
+        assert tp+fp+tn+fn == gt_mos_label.size
+        dyn_iou = tp / (tp + fp + fn) if tp + fp + fn != 0 else 0.0
+        stc_iou = tn / (tn + fp + fn) if tn + fp + fn != 0 else 0.0
+
+        iou_state = np.zeros_like(gt_mos_label)
+        iou_state[tp_mask] = 0
+        iou_state[fp_mask] = 1
+        iou_state[tn_mask] = 2
+        iou_state[fn_mask] = 3
+        self.mos_iou_color = self.mos_iou_color_lut[iou_state]
+        return dyn_iou, stc_iou

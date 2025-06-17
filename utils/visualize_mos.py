@@ -9,6 +9,7 @@ from auxiliary.laserscan import LaserScan, SemLaserScan
 from auxiliary.laserscanvis import LaserScanVis
 import copy
 
+
 def get_args():
     parser = argparse.ArgumentParser("./visualize.py")
     parser.add_argument(
@@ -91,7 +92,7 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
+
     parser = get_args()
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -156,7 +157,7 @@ if __name__ == '__main__':
         # check that there are same amount of labels and scans
         if not FLAGS.ignore_safety:
             print(f"len(gt_label_names):{len(gt_label_names)}, len(scan_names)={len(scan_names)}")
-            assert(len(gt_label_names) == len(scan_names))
+            assert (len(gt_label_names) == len(scan_names))
 
         if FLAGS.predictions is not None:
             if FLAGS.version == "moving":
@@ -189,14 +190,14 @@ if __name__ == '__main__':
 
         for key in color_dict.keys():
             if (key == 250) or (key in movable_learning_map.keys() and movable_learning_map[key] == 2):
-                color_dict[key] = [255, 0, 0]
+                color_dict[key] = [255, 0, 0]      # 可移动对象着色（蓝色）
                 if key != 250 and moving_learning_map[key] == 2:
-                    color_dict[key] = [0, 0, 255]
-            else:
-                color_dict[key] = [255, 255, 255]
+                    color_dict[key] = [0, 0, 255]  # 运动对象着色（红色）
+            else: 
+                color_dict[key] = [255, 255, 255]  # 其它对象着色（白色）
         nclasses = len(color_dict)
         print(color_dict)
-        scan = SemLaserScan(nclasses, color_dict, H=H, W=W, project=True)
+        scan = SemLaserScan(nclasses, color_dict, H=H, W=W, project=True, moving_label_map=moving_learning_map)
     else:
         gt_label_names = None
         scan = LaserScan(H=H, W=W, project=True)  # project all opened scans to spheric proj

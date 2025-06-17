@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # This file is covered by the LICENSE file in the root of this project.
-
+import os
 import torch
 print("device count: ", torch.cuda.device_count())
 from torch import distributed as dist
-dist.init_process_group(backend="nccl")
-print("world_size: ", dist.get_world_size())
+
+if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
+    dist.init_process_group(backend="nccl")
+    print("world_size: ", dist.get_world_size())
 
 import random
 import numpy as np
