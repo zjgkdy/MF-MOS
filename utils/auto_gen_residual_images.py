@@ -4,22 +4,22 @@
 # This file is covered by the LICENSE file in the root of this project.
 # Brief: This script generates residual images
 
-import os
-os.environ["OMP_NUM_THREADS"] = "4"
-import yaml
-import numpy as np
-import matplotlib.pyplot as plt
-
-from tqdm import tqdm
-from icecream import ic
+from kitti_utils import range_projection
 from kitti_utils import load_poses, load_calib, load_files, load_vertex
+from icecream import ic
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+import os
+os.environ["OMP_NUM_THREADS"] = "18"
 
-try:
-    from c_gen_virtual_scan import gen_virtual_scan as range_projection
-except:
-    print("Using clib by $export PYTHONPATH=$PYTHONPATH:<path-to-library>")
-    print("Currently using python-lib to generate range images.")
-    from kitti_utils import range_projection
+# try:
+#     from c_gen_virtual_scan import gen_virtual_scan as range_projection
+# except:
+#     print("Using clib by $export PYTHONPATH=$PYTHONPATH:<path-to-library>")
+#     print("Currently using python-lib to generate range images.")
+#     from kitti_utils import range_projection
 
 
 def check_and_makedirs(dir_path):
@@ -103,15 +103,15 @@ def process_one_seq(config):
             last_scan = load_vertex(scan_paths[frame_idx - num_last_n])
             last_scan_transformed = np.linalg.inv(current_pose).dot(last_pose).dot(last_scan.T).T
             last_range_transformed = range_projection(last_scan_transformed.astype(np.float32),
-                                             range_image_params['height'], range_image_params['width'],
-                                             range_image_params['fov_up'], range_image_params['fov_down'],
-                                             range_image_params['max_range'], range_image_params['min_range'])[:, :, 3]
+                                                      range_image_params['height'], range_image_params['width'],
+                                                      range_image_params['fov_up'], range_image_params['fov_down'],
+                                                      range_image_params['max_range'], range_image_params['min_range'])[:, :, 3]
 
             # generate residual image
             valid_mask = (current_range > range_image_params['min_range']) & \
-                            (current_range < range_image_params['max_range']) & \
-                            (last_range_transformed > range_image_params['min_range']) & \
-                            (last_range_transformed < range_image_params['max_range'])
+                (current_range < range_image_params['max_range']) & \
+                (last_range_transformed > range_image_params['min_range']) & \
+                (last_range_transformed < range_image_params['max_range'])
             difference = np.abs(current_range[valid_mask] - last_range_transformed[valid_mask])
 
             if normalize:
@@ -144,7 +144,7 @@ def process_one_seq(config):
 if __name__ == '__main__':
 
     # load config file
-    dataset = "DATAROOT"
+    dataset = "data/semantic_kitti"
     config_filename = 'config/data_preparing.yaml'
     config = load_yaml(config_filename)
 
@@ -155,9 +155,9 @@ if __name__ == '__main__':
         residual_list = [1 * i for i in range(1, 9)]
 
     # used for kitti-raw and kitti-road
-    for seq in seq_list: # sequences id
+    for seq in seq_list:  # sequences id
 
-        for i in residual_list: # residual_image_i
+        for i in residual_list:  # residual_image_i
 
             # Update the value in config to facilitate the iterative loop
             config['num_last_n'] = i

@@ -2,12 +2,12 @@
 # This file is covered by the LICENSE file in the root of this project.
 
 import os
-from utils.utils import *
-from modules.user import *
-from modules.user_refine import *
+from utils.utils import get_args, load_yaml, make_predictions_dir, check_model_dir
+from modules.user import User
+from modules.user_refine import UserRefine
 
 if __name__ == '__main__':
-    
+
     parser = get_args(flags="infer")
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     ARCH = load_yaml(FLAGS.model + "/arch_cfg.yaml")
     DATA = load_yaml(FLAGS.model + "/data_cfg.yaml")
 
-    make_predictions_dir(FLAGS, DATA, save_movable=FLAGS.movable) # create predictions file folder
+    make_predictions_dir(FLAGS, DATA, save_movable=FLAGS.movable)  # create predictions file folder
     check_model_dir(FLAGS.model)      # does model folder exist?
 
     # create user and infer dataset

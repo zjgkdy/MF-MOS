@@ -87,12 +87,12 @@ def get_args():
 
 
 if __name__ == '__main__':
-    
+
     parser = get_args()
     FLAGS, unparsed = parser.parse_known_args()
-    
-    assert(FLAGS.split in splits)     # assert split
-    assert(FLAGS.backend in backends) # assert backend
+
+    assert (FLAGS.split in splits)      # assert split
+    assert (FLAGS.backend in backends)  # assert backend
 
     # fill in real predictions dir
     if FLAGS.predictions is None:
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
     # make lookup table for mapping
     maxkey = max(class_remap.keys())
-    
+
     # +100 hack making lut bigger just in case there are unknown labels
     remap_lut = np.zeros((maxkey + 100), dtype=np.int32)
     remap_lut[list(class_remap.keys())] = list(class_remap.values())
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     print("labels: ", len(label_names))
     print("predictions: ", len(pred_names))
-    assert(len(label_names) == len(pred_names))
+    assert (len(label_names) == len(pred_names))
     if FLAGS.radius != -1:
         print("lidars: ", len(lidar_names))
         print(f"\033[32m Only use the points in radius <= {FLAGS.radius}m. \033[0m")
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         if FLAGS.radius != -1:
             pc_xyz = np.fromfile(lidar_names[f_id], dtype=np.float32).reshape((-1, 4))[:, :3]
             depth = np.linalg.norm(pc_xyz, 2, axis=1)
-            
+
             radius_mask = np.ones((pc_xyz.shape[0]), dtype=bool)
             if FLAGS.radius > 0:
                 radius_mask = np.logical_and(depth <= FLAGS.radius, depth >= 2)
@@ -233,7 +233,7 @@ if __name__ == '__main__':
             pred = pred[radius_mask]
             label = label[radius_mask]
 
-        evaluator.addBatch(pred, label) # shape: (n, ) (n, ), type: int32
+        evaluator.addBatch(pred, label)  # shape: (n, ) (n, ), type: int32
         # m_jaccard, class_jaccard = evaluator.getIoU()
         # frame_evaluator.addBatch(pred, label)
         # m_jaccard, class_jaccard = frame_evaluator.getIoU()

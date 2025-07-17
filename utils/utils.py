@@ -32,7 +32,7 @@ def millify(n, precision=0, drop_nulls=True, prefixes=[]):
 
 def str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n'):
@@ -147,7 +147,7 @@ def make_predictions_dir(FLAGS, DATA, rm_old=False, save_movable=False):
             os.makedirs(FLAGS.log)
             os.makedirs(os.path.join(FLAGS.log, "sequences"))
         check_and_makedirs(os.path.join(FLAGS.log, "sequences"))
-        
+
         for seq in DATA["split"][FLAGS.split]:
             seq = '{0:02d}'.format(int(seq))
             print(f"{FLAGS.split} : {seq}")
@@ -195,7 +195,7 @@ def get_args(flags=None):
     #     type=str2bool, nargs='?',
     #     const=True, default=True,
     #     help='Set this if you want to use the Uncertainty Version')
-    
+
     if flags == "train":
         parser.add_argument(
             '--pretrained', '-p', type=str,

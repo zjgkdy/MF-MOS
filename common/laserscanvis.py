@@ -5,7 +5,7 @@ import vispy
 from vispy.scene import visuals, SceneCanvas
 import numpy as np
 from matplotlib import pyplot as plt
-
+from imageio import imwrite
 
 class LaserScanVis:
     """Class that creates and handles a visualizer for a pointcloud"""
@@ -203,6 +203,12 @@ class LaserScanVis:
             if self.offset <= 0:
                 self.offset = len(self.scan_names)-1
             self.update_scan()
+        elif event.key == "P":
+            print("Saving screenshots...")
+            rv_img = self.img_canvas.render()
+            pc_img = self.canvas.render()
+            imwrite(f"screenshots/rv_scan_{self.offset}.png", rv_img)
+            imwrite(f"screenshots/pc_scan_{self.offset}.png", pc_img)
         elif event.key == 'Q' or event.key == 'Escape':
             self.destroy()
 

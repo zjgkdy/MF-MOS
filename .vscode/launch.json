@@ -1,0 +1,71 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Train MF-MOS Model",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "/home/luoteng/anaconda3/envs/mfmos/bin/python",
+            "cwd": "/home/luoteng/MF-MOS",
+            // "program": "${file}",
+            // "program": "/home/luoteng/MF-MOS/utils/auto_gen_residual_images.py",
+            // "program": "/home/luoteng/MF-MOS/infer.py",
+            "program": "/home/luoteng/MF-MOS/train.py",
+            // "program": "/home/luoteng/MF-MOS/utils/visualize_mos.py",
+            // "program": "/home/luoteng/MF-MOS/utils/evaluate_mos.py",
+            "console": "integratedTerminal",
+            "env": {
+                // "QT_QPA_PLATFORM": "offscreen",
+                // "QT_QPA_PLATFORM_PLUGIN_PATH": "/home/luoteng/anaconda3/envs/mfmos/lib/python3.8/site-packages/cv2/qt/plugins",
+                "CAFFE2_THREADPOOL_DISABLE_WARNING": "1",
+                "PYTHONPATH": "/home/luoteng/MF-MOS",
+                "WORKERS": "4",
+                "BATCH_SIZE": "1",
+                "WORLD_SIZE": "1",  // GPU数量
+            },
+            "args": [
+                /* Config: infer.py */
+                // "--dataset",
+                // "data/semantic_kitti",
+                // "--log",
+                // "./log/Valid/predictions/",
+                // "--model",
+                // "/home/luoteng/MF-MOS/ckpt/mfmos_ckpt_iou7612",
+                // "--split",
+                // "valid",
+                // "--pointrefine",
+                // "--movable",
+
+                // // visualize.py
+                // "--dataset",
+                // "data/semantic_kitti",
+                // "--sequence",
+                // "08",
+                // "--config",
+                // "config/labels/semantic-kitti-mos.raw.yaml",
+                // "--version",
+                // "fuse",
+                // "--predictions",
+                // "log/Valid/predictions"
+
+                // evaluate.py
+                // "--dataset",
+                // "data/semantic_kitti",
+                // "--datacfg",
+                // "config/labels/semantic-kitti-mos.raw.yaml",
+                // "--predictions",
+                // "log/Valid/predictions"
+
+                // train.py
+                "--dataset",
+                "data/SemanticKITTI",
+                "--arch_cfg",
+                "./train_yaml/ddp_mos_coarse_stage.yml",
+                "--data_cfg",
+                "./config/labels/semantic-kitti-mos.raw.yaml",
+                "--log",
+                "./log/Train"
+            ]
+        }
+    ]
+}
