@@ -58,7 +58,7 @@
 
                 // train.py
                 "--dataset",
-                "data/semantic_kitti",
+                "data/SemanticKITTI",
                 "--arch_cfg",
                 "./train_yaml/ddp_mos_coarse_stage.yml",
                 "--data_cfg",
