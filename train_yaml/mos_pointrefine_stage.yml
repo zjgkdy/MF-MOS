@@ -11,7 +11,7 @@ train:
   w_decay: 0.0001        # weight decay
   batch_size: 1          # batch size
   report_batch: 10       # every x batches, report loss
-  report_epoch: 1        # every x epochs, report validation set
+  report_epoch: 10       # every x epochs, report validation set
   epsilon_w: 0.001       # class weight w = 1 / (content + epsilon_w)
   save_summary: False    # Summary of weight histograms for tensorboard
   save_scans: False      # False doesn't save anything, True saves some sample images

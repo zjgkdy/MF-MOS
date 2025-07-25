@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DatasetPath=data/semantic_kitti
+DatasetPath=data/SemanticKITTI
 PredictionsPath=./log/Valid/predictions
 DataConfig=./config/labels/semantic-kitti-mos.raw.yaml
 

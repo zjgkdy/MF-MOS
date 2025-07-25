@@ -4,12 +4,10 @@ DatasetPath=data/SemanticKITTI
 ArchConfig=./train_yaml/ddp_mos_coarse_stage.yml
 DataConfig=./config/labels/semantic-kitti-mos.raw.yaml
 LogPath=./log/Train
-Pretrained=./log/Train/2025-7-18-11:36/MFMOS_valid_best_5
 
-export CUDA_VISIBLE_DEVICES=1,2,3
-python3 -m torch.distributed.launch --nproc_per_node=3 \
+export CUDA_VISIBLE_DEVICES=1
+python3 -m torch.distributed.launch --nproc_per_node=1 \
                             ./train.py -d $DatasetPath \
                                         -ac $ArchConfig \
                                         -dc $DataConfig \
-                                        -l $LogPath \
-                                        # --pretrained $Pretrained
+                                        -l $LogPath

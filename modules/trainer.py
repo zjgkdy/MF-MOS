@@ -25,6 +25,8 @@ from modules.tools import AverageMeter, iouEval, save_checkpoint, show_scans_in_
 
 from torch import distributed as dist
 
+from torch.cuda.amp import autocast, GradScaler
+
 class Trainer():
     def __init__(self, ARCH, DATA, datadir, logdir, path=None, point_refine=False, local_rank=0):
         # parameters
@@ -36,6 +38,10 @@ class Trainer():
         self.epoch = 0
         self.point_refine = point_refine
         self.local_rank = local_rank
+        self.AMP_enable = self.ARCH["train"]["AMP_enable"]
+        self.distributed = True
+        if self.AMP_enable:
+            self.scaler = GradScaler()
 
         self.batch_time_t = AverageMeter()
         self.data_time_t = AverageMeter()
@@ -194,8 +200,15 @@ class Trainer():
         torch.nn.Module.dump_patches = True
         if not self.point_refine:
             checkpoint = "MFMOS"
-            w_dict = torch.load(f"{self.path}/{checkpoint}", map_location=lambda storage, loc: storage)
-            self.model.load_state_dict(w_dict['state_dict'], strict=True)
+            w_dict = torch.load(f"{self.path}", map_location=lambda storage, loc: storage)
+            
+            if self.distributed:
+                print("before load state dict")
+                self.model.module.load_state_dict(w_dict['state_dict'], strict=True)
+                print("after load state dict")
+            else:
+                self.model.load_state_dict(w_dict['state_dict'], strict=True)
+                
             self.optimizer.load_state_dict(w_dict['optimizer'])
             self.epoch = w_dict['epoch'] + 1
             self.scheduler.load_state_dict(w_dict['scheduler'])
@@ -279,12 +292,11 @@ class Trainer():
                                                                      report=self.ARCH["train"]["report_batch"],
                                                                      show_scans=self.ARCH["train"]["show_scans"])
 
-            if self.local_rank == 0:
+            if epoch % self.ARCH["train"]["report_epoch"] == 0 and self.local_rank == 0:
                 # update the info dict and save the training checkpoint
                 self.update_training_info(epoch, acc, iou, loss, update_mean, hetero_l)
-
-            # evaluate on validation set
-            if epoch % self.ARCH["train"]["report_epoch"] == 0 and self.local_rank == 0:
+                
+                # evaluate on validation set
                 acc, iou, loss, rand_img, hetero_l = self.validate(val_loader=self.parser.get_valid_set(),
                                                                    model=self.model,
                                                                    all_criterion=(self.criterion, self.movable_criterion),
@@ -354,23 +366,26 @@ class Trainer():
                 proj_labels = proj_labels.cuda().long()
                 movable_proj_labels = movable_proj_labels.cuda().long()
 
-            output, _, movable_output, _ = model(in_vol)
+            with autocast(enabled=self.AMP_enable):  # 自动混合精度
+                output, _, movable_output, _ = model(in_vol)
 
-            # loss_m = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + self.ls(output, proj_labels.long())
-            moving_loss_m = criterion(torch.log(output.clamp(min=1e-8)).double(), proj_labels).float() + self.ls(output, proj_labels.long())
-            movable_loss_m = movable_criterion(torch.log(movable_output.clamp(min=1e-8)).double(), movable_proj_labels).float() \
-                             + self.movable_ls(movable_output, movable_proj_labels.long())
+                # loss_m = criterion(torch.log(output.clamp(min=1e-8)), proj_labels) + self.ls(output, proj_labels.long())
+                moving_loss_m = criterion(torch.log(output.clamp(min=1e-8)).double(), proj_labels).float() + self.ls(output, proj_labels.long())
+                movable_loss_m = movable_criterion(torch.log(movable_output.clamp(min=1e-8)).double(), movable_proj_labels).float() \
+                                + self.movable_ls(movable_output, movable_proj_labels.long())
 
-            loss_m = moving_loss_m + movable_loss_m
+                loss_m = moving_loss_m + movable_loss_m
 
             optimizer.zero_grad()
-            # if self.n_gpus > 1:
-            #     idx = torch.ones(self.n_gpus).cuda()
-            #     loss_m.backward(idx)
-            # else:
-            #     loss_m.backward()
-            loss_m.backward()
-            optimizer.step()
+            if self.AMP_enable:
+                self.scaler.scale(loss_m).backward()       # 反向传播放大
+                self.scaler.step(optimizer)              # 更新参数
+                scheduler.step()
+                self.scaler.update()                     # 更新缩放器
+            else:
+                loss_m.backward()
+                optimizer.step()
+                scheduler.step()
 
             # measure accuracy and record loss
             loss = loss_m.mean()
@@ -445,7 +460,7 @@ class Trainer():
                 save_to_txtlog(self.logdir, 'log.txt', str_line)
 
             # step scheduler
-            scheduler.step()
+            # scheduler.step()
 
         return acc.avg, iou.avg, losses.avg, update_ratio_meter.avg, hetero_l.avg
 
@@ -644,5 +659,4 @@ class Trainer():
                      'info': self.info,
                      'scheduler': self.scheduler.state_dict()}
             save_checkpoint(state, self.logdir, suffix="_valid_best")
-            save_checkpoint(state, self.logdir, suffix=f"_valid_best_{epoch}")
 

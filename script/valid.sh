@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DatasetPath=data/semantic_kitti
+DatasetPath=data/SemanticKITTI
 ModelPath=/home/luoteng/MF-MOS/ckpt/mfmos_ckpt_iou7612
 SavePath=./log/Valid/predictions/
 SPLIT=valid # valid or test
@@ -10,5 +10,5 @@ export CUDA_VISIBLE_DEVICES=0 && python3 infer.py -d $DatasetPath \
                                                   -m $ModelPath \
                                                   -l $SavePath \
                                                   -s $SPLIT \
-                                                  --pointrefine \
                                                   --movable # Whether to save the label of movable objects
+                                                #   --pointrefine \

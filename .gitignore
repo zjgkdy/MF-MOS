@@ -141,7 +141,9 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 ckpt/mfmos_ckpt_iou7612/MFMOS*
+ckpt/mfmos_ckpt_ours/MFMOS*
 
 data/
 screenshots/
 .vscode/
+.vscode/launch.json

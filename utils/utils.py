@@ -195,7 +195,6 @@ def get_args(flags=None):
     #     type=str2bool, nargs='?',
     #     const=True, default=True,
     #     help='Set this if you want to use the Uncertainty Version')
-
     if flags == "train":
         parser.add_argument(
             '--pretrained', '-p', type=str,

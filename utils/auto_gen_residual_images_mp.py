@@ -6,6 +6,7 @@
 
 import os
 import yaml
+import psutil
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,6 +22,8 @@ except:
     print("Currently using python-lib to generate range images.")
     from kitti_utils import range_projection
 
+p = psutil.Process(os.getpid())
+p.cpu_affinity(list(range(32, 64)))
 
 def check_and_makedirs(dir_path):
     if not os.path.exists(dir_path):
@@ -149,12 +152,12 @@ def check_residual(path):
 if __name__ == '__main__':
 
     # load config file
-    dataset = "DATAROOT"
-    config_filename = '../config/data_preparing.yaml'
+    dataset = "data/SemanticKITTI"
+    config_filename = 'config/data_preparing.yaml'
     config = load_yaml(config_filename)
 
     seq_split_part = 5
-    residual_split_part = 5
+    residual_split_part = 1
 
     all_seq_list = [i for i in range(0, 11)]   # 0-10 for training
     if config['residual_aug']:
