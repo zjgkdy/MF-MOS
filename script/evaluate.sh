@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DatasetPath=data/SemanticKITTI
-PredictionsPath=./log/Valid/predictions
+PredictionsPath=./log/Valid/predictions_ours
 DataConfig=./config/labels/semantic-kitti-mos.raw.yaml
 
 python3 utils/evaluate_mos.py -d $DatasetPath \
