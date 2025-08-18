@@ -204,7 +204,7 @@ class Trainer():
             
             if self.distributed:
                 print("before load state dict")
-                self.model.module.load_state_dict(w_dict['state_dict'], strict=True)
+                self.model.load_state_dict(w_dict['state_dict'], strict=True)
                 print("after load state dict")
             else:
                 self.model.load_state_dict(w_dict['state_dict'], strict=True)
@@ -219,7 +219,7 @@ class Trainer():
         else:
             checkpoint = "MFMOS_valid_best"
             w_dict = torch.load(f"{self.path}/{checkpoint}", map_location=lambda storage, loc: storage)
-            # self.model.load_state_dict(w_dict['state_dict'], strict=True)
+            # self.model.load_state_dict(w_dMFMOS_SIEM_valid_bestict['state_dict'], strict=True)
             self.model.load_state_dict({k.replace('module.',''):v for k,v in w_dict['state_dict'].items()})
             self.optimizer.load_state_dict(w_dict['optimizer'])
             print("load the coarse model of MFMOS_valid_best")

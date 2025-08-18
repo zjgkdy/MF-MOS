@@ -1,8 +1,10 @@
 #!/bin/bash
 
 DatasetPath=data/SemanticKITTI
-ModelPath=ckpt/mfmos_ckpt_ours
-SavePath=./log/Valid/predictions_1stage_ours/
+# ModelPath=ckpt/mfmos_ckpt_ours
+# SavePath=./log/Valid/ckpt_ours_1stage/
+ModelPath=ckpt/mfmos_ckpt_iou7612
+SavePath=./log/Valid/ckpt_iou7612_1stage/
 SPLIT=valid # valid or test
 
 # If you want to use SIEM, set pointrefine on

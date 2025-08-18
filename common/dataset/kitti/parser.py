@@ -110,7 +110,7 @@ class SemanticKitti(Dataset):
         """
         # dictionary for mapping a dataset index to a sequence, frame_id tuple needed for using multiple frames
         self.dataset_size = 0
-        self.index_mapping = {}
+        self.index_mapping = {} 
         dataset_index = 0
         # added this for dynamic object removal
         self.n_input_scans = sensor["n_input_scans"]  # This needs to be the same as in arch_cfg.yaml!
